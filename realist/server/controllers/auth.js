@@ -6,7 +6,7 @@ import User from "../models/user.js";
 import { nanoid } from "nanoid";
 import validator from "email-validator";
 
-const tokenAndUserResponse = (req, res, user)=>{
+const tokenAndUserResponse = (req, res, user) => {
   const token = jwt.sign({ _id: user._id }, config.JWT_SECRET, {
     expiresIn: "1h",
   });
@@ -113,6 +113,12 @@ export const login = async (req, res) => {
     const { email, password } = req.body;
     // 1 find user by email
     const user = await User.findOne({ email });
+
+    // Handle non-existent user
+    if (!user) {
+      return res.json({ error: "User not found" });
+    }
+
     // 2 compare password
     const match = await comparePassword(password, user.password);
     if (!match) {
@@ -126,7 +132,6 @@ export const login = async (req, res) => {
   }
 };
 
-
 //to implement forgot password feature
 
 export const forgotPassword = async (req, res) => {
@@ -137,7 +142,7 @@ export const forgotPassword = async (req, res) => {
     if (!user) {
       return res.json({ error: "Could not find user with that email" });
     } else {
-      const resetCode = nanoid();//creating unique id using nanoid id package  
+      const resetCode = nanoid(); //creating unique id using nanoid id package
       user.resetCode = resetCode;
       user.save();
 
@@ -186,6 +191,7 @@ export const accessAccount = async (req, res) => {
     return res.json({ error: "Something went wrong. Try again." });
   }
 };
+
 //here first we verify the refreshtoken, if it hasn't expired then we access the id from that token
 //and then we find the user based on that id and then generate the fresh token
 export const refreshToken = async (req, res) => {
@@ -210,5 +216,60 @@ export const currentUser = async (req, res) => {
   } catch (err) {
     console.log(err);
     return res.status(403).json({ error: "Unauhorized" });
+  }
+};
+
+export const publicProfile = async (req, res) => {
+  try {
+    const user = await User.findOne({ username: req.params.username });
+    user.password = undefined;
+    user.resetCode = undefined;
+    res.json(user);
+  } catch (err) {
+    console.log(err);
+    return res.json({ error: "User not found" });
+  }
+};
+
+//update Password
+export const updatePassword = async (req, res) => {
+  try {
+    const { password } = req.body;
+
+    if (!password) {
+      return res.json({ error: "Password is required" });
+    }
+    if (password && password?.length < 6) {
+      return res.json({ error: "Password should be min 6 characters" });
+    }
+
+    const user = await User.findByIdAndUpdate(req.user._id, {
+      password: await hashPassword(password),
+    });
+
+    res.json({ ok: true });
+  } catch (err) {
+    console.log(err);
+    return res.status(403).json({ error: "Unauhorized" });
+  }
+};
+
+//update Profile
+
+export const updateProfile = async (req, res) => {
+  try {
+    const user = await User.findByIdAndUpdate(req.user._id, req.body, {
+      new: true,
+    });
+    user.password = undefined;
+    user.resetCode = undefined;
+    res.json(user);
+  } catch (err) {
+    console.log(err);
+    if (err.codeName === "DuplicateKey") {
+      return res.json({ error: "Username or email is already taken" });
+    } else {
+      return res.status(403).json({ error: "Unauhorized" });
+    }
   }
 };
