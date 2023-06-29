@@ -1,5 +1,3 @@
-//creating database model in MongoDB
-
 import { model, Schema, ObjectId } from "mongoose";
 
 const schema = new Schema(
@@ -39,11 +37,7 @@ const schema = new Schema(
     },
     enquiredProperties: [{ type: ObjectId, ref: "Ad" }],
     wishlist: [{ type: ObjectId, ref: "Ad" }],
-    resetCode: {
-      type: String,
-      default: ""
-    },
-    
+    resetCode: "",
   },
   { timestamps: true }
 );

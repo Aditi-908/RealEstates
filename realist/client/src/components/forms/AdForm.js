@@ -3,6 +3,9 @@ import GooglePlacesAutocomplete from "react-google-places-autocomplete";
 import { GOOGLE_PLACES_KEY } from "../../config";
 import CurrencyInput from "react-currency-input-field";
 import ImageUpload from "./ImageUpload";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 
 export default function AdForm({ action, type }) {
   // state
@@ -15,11 +18,33 @@ export default function AdForm({ action, type }) {
     bathrooms: "",
     carpark: "",
     landsize: "",
-    type: "",
     title: "",
     description: "",
     loading: false,
+    type,
+    action,
   });
+  // hooks
+  const navigate = useNavigate();
+
+  const handleClick = async () => {
+    try {
+      setAd({ ...ad, loading: true });
+      const { data } = await axios.post("/ad", ad);
+      console.log("ad create response => ", data);
+      if (data?.error) {
+        toast.error(data.error);
+        setAd({ ...ad, loading: false });
+      } else {
+        toast.success("Ad created successfully");
+        setAd({ ...ad, loading: false });
+        navigate("/dashboard");
+      }
+    } catch (err) {
+      console.log(err);
+      setAd({ ...ad, loading: false });
+    }
+  };
 
   return (
     <>
@@ -27,7 +52,7 @@ export default function AdForm({ action, type }) {
         <ImageUpload ad={ad} setAd={setAd} />
         <GooglePlacesAutocomplete
           apiKey={GOOGLE_PLACES_KEY}
-          apiOptions="au"
+          apiOptions="in"
           selectProps={{
             defaultInputValue: ad?.address,
             placeholder: "Search for address..",
@@ -38,12 +63,14 @@ export default function AdForm({ action, type }) {
         />
       </div>
 
-      <CurrencyInput
-        placeholder="Enter price"
-        defaultValue={ad.price}
-        className="form-control mb-3"
-        onValueChange={(value) => setAd({ ...ad, price: value })}
-      />
+      <div style={{ marginTop: "80px" }}>
+        <CurrencyInput
+          placeholder="Enter price"
+          defaultValue={ad.price}
+          className="form-control mb-3"
+          onValueChange={(value) => setAd({ ...ad, price: value })}
+        />
+      </div>
 
       <input
         type="number"
@@ -95,9 +122,14 @@ export default function AdForm({ action, type }) {
         onChange={(e) => setAd({ ...ad, description: e.target.value })}
       />
 
-      <button className="btn btn-primary">Submit</button>
+      <button
+        onClick={handleClick}
+        className={`btn btn-primary mb-5 ${ad.loading ? "disabled" : ""}`}
+      >
+        {ad.loading ? "Saving..." : "Submit"}
+      </button>
 
-      <pre>{JSON.stringify(ad, null, 4)}</pre>
+      {/* <pre>{JSON.stringify(ad, null, 4)}</pre> */}
     </>
   );
 }

@@ -113,26 +113,18 @@ export const login = async (req, res) => {
     const { email, password } = req.body;
     // 1 find user by email
     const user = await User.findOne({ email });
-
-    // Handle non-existent user
-    if (!user) {
-      return res.json({ error: "User not found" });
-    }
-
     // 2 compare password
     const match = await comparePassword(password, user.password);
     if (!match) {
       return res.json({ error: "Wrong password" });
     }
-    // 3 create jwt tokens
+
     tokenAndUserResponse(req, res, user);
   } catch (err) {
     console.log(err);
     return res.json({ error: "Something went wrong. Try again." });
   }
 };
-
-//to implement forgot password feature
 
 export const forgotPassword = async (req, res) => {
   try {
@@ -142,7 +134,7 @@ export const forgotPassword = async (req, res) => {
     if (!user) {
       return res.json({ error: "Could not find user with that email" });
     } else {
-      const resetCode = nanoid(); //creating unique id using nanoid id package
+      const resetCode = nanoid();
       user.resetCode = resetCode;
       user.save();
 
@@ -177,8 +169,6 @@ export const forgotPassword = async (req, res) => {
   }
 };
 
-//Implementing code to allow user to access account after forgot password request
-
 export const accessAccount = async (req, res) => {
   try {
     const { resetCode } = jwt.verify(req.body.resetCode, config.JWT_SECRET);
@@ -192,8 +182,6 @@ export const accessAccount = async (req, res) => {
   }
 };
 
-//here first we verify the refreshtoken, if it hasn't expired then we access the id from that token
-//and then we find the user based on that id and then generate the fresh token
 export const refreshToken = async (req, res) => {
   try {
     const { _id } = jwt.verify(req.headers.refresh_token, config.JWT_SECRET);
@@ -231,7 +219,6 @@ export const publicProfile = async (req, res) => {
   }
 };
 
-//update Password
 export const updatePassword = async (req, res) => {
   try {
     const { password } = req.body;
@@ -253,8 +240,6 @@ export const updatePassword = async (req, res) => {
     return res.status(403).json({ error: "Unauhorized" });
   }
 };
-
-//update Profile
 
 export const updateProfile = async (req, res) => {
   try {
