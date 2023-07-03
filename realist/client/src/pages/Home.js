@@ -34,6 +34,15 @@ export default function Home() {
           ))}
         </div>
       </div>
+
+      <h1 className="display-1 bg-primary text-light p-5">For Rent</h1>
+      <div className="container">
+        <div className="row">
+          {adsForRent?.map(ad => (
+            <AdCard ad={ad} key={ad._id} />
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
