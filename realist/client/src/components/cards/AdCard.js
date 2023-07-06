@@ -2,6 +2,7 @@ import { IoBedOutline } from "react-icons/io5";
 import { TbBath } from "react-icons/tb";
 import { BiArea } from "react-icons/bi";
 import { Badge } from "antd";
+import {Link} from 'react-router-dom'
 
 export default function AdCard({ ad }) {
   function formatNumber(x) {
@@ -10,6 +11,7 @@ export default function AdCard({ ad }) {
 
   return (
     <div className="col-lg-4 p-4 gx-4 gy-4">
+      <Link to={`/ad/${ad.slug}`}>
       <Badge.Ribbon
         text={`${ad?.type} for ${ad?.action}`}
         color={`${ad?.action === "Sell" ? "blue" : "red"}`}
@@ -53,6 +55,7 @@ export default function AdCard({ ad }) {
           </div>
         </div>
       </Badge.Ribbon>
+      </Link>
     </div>
   );
 }
