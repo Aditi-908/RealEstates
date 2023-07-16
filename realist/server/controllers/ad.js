@@ -144,7 +144,7 @@ export const read = async (req, res) => {
       action: ad.action,
       type: ad.type,
       address: {
-        $regex: ad.googleMap[0].city,
+        $regex: ad.googleMap[0]?.admininstrativeLevels?.levelllong || "",
         $options: "i",
       },
     })
@@ -152,6 +152,91 @@ export const read = async (req, res) => {
       .select("-photos.Key -photos.key -photos.ETag -photos.Bucket -googleMap");
 
     res.json({ ad, related });
+  } catch (err) {
+    console.log(err);
+  }
+  //add to wishlist
+};
+export const addToWishlist = async (req, res) => {
+  try {
+    const user = await User.findByIdAndUpdate(
+      req.user._id,
+      {
+        $addToSet: { wishlist: req.body.adId },
+      },
+      { new: true }
+    );
+
+    const { password, resetCode, ...rest } = user._doc;
+
+    // console.log("added to wishlist => ", rest);
+
+    res.json(rest);
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+export const removeFromWishlist = async (req, res) => {
+  try {
+    const user = await User.findByIdAndUpdate(
+      req.user._id,
+      {
+        $pull: { wishlist: req.params.adId },
+      },
+      { new: true }
+    );
+    const { password, resetCode, ...rest } = user._doc;
+    // console.log("remove from wishlist => ", rest);
+
+    res.json(rest);
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+//contact seller
+export const contactSeller = async (req, res) => {
+  try {
+    const { name, email, message, phone, adId } = req.body;
+    const ad = await Ad.findById(adId).populate("postedBy", "email");
+
+    const user = await User.findByIdAndUpdate(req.user._id, {
+      $addToSet: { enquiredProperties: adId },
+    });
+
+    if (!user) {
+      return res.json({ error: "Could not find user with that email" });
+    } else {
+      // send email
+      config.AWSSES.sendEmail(
+        emailTemplate(
+          ad.postedBy.email,
+          `
+        <p>You have received a new customer enquiry</p>
+
+          <h4>Customer details</h4>
+          <p>Name: ${name}</p>
+          <p>Email: ${email}</p>
+          <p>Phone: ${phone}</p>
+          <p>Message: ${message}</p>
+
+        <a href="${config.CLIENT_URL}/ad/${ad.slug}">${ad.type} in ${ad.address} for ${ad.action} ${ad.price}</a>
+        `,
+          email,
+          "New enquiry received"
+        ),
+        (err, data) => {
+          if (err) {
+            console.log(err);
+            return res.json({ ok: false });
+          } else {
+            console.log(data);
+            return res.json({ ok: true });
+          }
+        }
+      );
+    }
   } catch (err) {
     console.log(err);
   }
