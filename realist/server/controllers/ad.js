@@ -3,6 +3,7 @@ import { nanoid } from "nanoid";
 import slugify from "slugify";
 import Ad from "../models/ad.js";
 import User from "../models/user.js";
+import { emailTemplate } from "../helpers/email.js";
 
 export const uploadImage = async (req, res) => {
   try {
@@ -17,7 +18,7 @@ export const uploadImage = async (req, res) => {
 
     // image params
     const params = {
-      Bucket: "realist-image-upload",
+      Bucket: "realist-app-udemy-course-bucket",
       Key: `${nanoid()}.${type}`,
       Body: base64Image,
       ACL: "public-read",
@@ -137,6 +138,7 @@ export const read = async (req, res) => {
       "postedBy",
       "name username email phone company photo.Location"
     );
+    // console.log("AD => ", ad);
 
     // related
     const related = await Ad.find({
@@ -155,8 +157,8 @@ export const read = async (req, res) => {
   } catch (err) {
     console.log(err);
   }
-  //add to wishlist
 };
+
 export const addToWishlist = async (req, res) => {
   try {
     const user = await User.findByIdAndUpdate(
@@ -186,6 +188,7 @@ export const removeFromWishlist = async (req, res) => {
       },
       { new: true }
     );
+
     const { password, resetCode, ...rest } = user._doc;
     // console.log("remove from wishlist => ", rest);
 
@@ -195,7 +198,6 @@ export const removeFromWishlist = async (req, res) => {
   }
 };
 
-//contact seller
 export const contactSeller = async (req, res) => {
   try {
     const { name, email, message, phone, adId } = req.body;
@@ -236,6 +238,71 @@ export const contactSeller = async (req, res) => {
           }
         }
       );
+    }
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+export const userAds = async (req, res) => {
+  try {
+    const perPage = 2;
+    const page = req.params.page ? req.params.page : 1;
+
+    const total = await Ad.find({ postedBy: req.user._id });
+
+    const ads = await Ad.find({ postedBy: req.user._id })
+      .populate("postedBy", "name email username phone company")
+      .skip((page - 1) * perPage)
+      .limit(perPage)
+      .sort({ createdAt: -1 });
+
+    res.json({ ads, total: total.length });
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+export const update = async (req, res) => {
+  try {
+    const { photos, price, type, address, description } = req.body;
+
+    const ad = await Ad.findById(req.params._id);
+
+    const owner = req.user._id == ad?.postedBy;
+
+    if (!owner) {
+      return res.json({ error: "Permission denied" });
+    } else {
+      // validation
+      if (!photos.length) {
+        return res.json({ error: "Photos are required" });
+      }
+      if (!price) {
+        return res.json({ error: "Price is required" });
+      }
+      if (!type) {
+        return res.json({ error: "Is property hour or land?" });
+      }
+      if (!address) {
+        return res.json({ error: "Address is required" });
+      }
+      if (!description) {
+        return res.json({ error: "Description are required" });
+      }
+
+      // const geo = await config.GOOGLE_GEOCODER.geocode(address);
+
+      await ad.update({
+        ...req.body,
+        slug: ad.slug,
+        // location: {
+        //   type: "Point",
+        //   coordinates: [geo?.[0]?.longitude, geo?.[0]?.latitude],
+        // },
+      });
+
+      res.json({ ok: true });
     }
   } catch (err) {
     console.log(err);
