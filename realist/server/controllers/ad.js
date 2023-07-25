@@ -291,15 +291,15 @@ export const update = async (req, res) => {
         return res.json({ error: "Description are required" });
       }
 
-      // const geo = await config.GOOGLE_GEOCODER.geocode(address);
+      const geo = await config.GOOGLE_GEOCODER.geocode(address);
 
       await ad.update({
         ...req.body,
         slug: ad.slug,
-        // location: {
-        //   type: "Point",
-        //   coordinates: [geo?.[0]?.longitude, geo?.[0]?.latitude],
-        // },
+        location: {
+          type: "Point",
+          coordinates: [geo?.[0]?.longitude, geo?.[0]?.latitude],
+        },
       });
 
       res.json({ ok: true });

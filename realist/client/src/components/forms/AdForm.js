@@ -6,8 +6,11 @@ import ImageUpload from "./ImageUpload";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
+import { useAuth } from "../../context/auth";
 
 export default function AdForm({ action, type }) {
+  // context
+  const [auth, setAuth] = useAuth();
   // state
   const [ad, setAd] = useState({
     photos: [],
@@ -36,9 +39,21 @@ export default function AdForm({ action, type }) {
         toast.error(data.error);
         setAd({ ...ad, loading: false });
       } else {
+        // data {user, ad}
+
+        // update user in context
+        setAuth({ ...auth, user: data.user });
+        // update user in local storage
+        const fromLS = JSON.parse(localStorage.getItem("auth"));
+        fromLS.user = data.user;
+        localStorage.setItem("auth", JSON.stringify(fromLS));
+
         toast.success("Ad created successfully");
         setAd({ ...ad, loading: false });
-        navigate("/dashboard");
+        // navigate("/dashboard");
+
+        // reload page on redirect
+        window.location.href = "/dashboard";
       }
     } catch (err) {
       console.log(err);
@@ -52,7 +67,7 @@ export default function AdForm({ action, type }) {
         <ImageUpload ad={ad} setAd={setAd} />
         <GooglePlacesAutocomplete
           apiKey={GOOGLE_PLACES_KEY}
-          apiOptions="in"
+          apiOptions="au"
           selectProps={{
             defaultInputValue: ad?.address,
             placeholder: "Search for address..",
@@ -72,34 +87,34 @@ export default function AdForm({ action, type }) {
         />
       </div>
 
-      {type === 'House' ? (
+      {type === "House" ? (
         <>
-        <input
-        type="number"
-        min="0"
-        className="form-control mb-3"
-        placeholder="Enter how many bedrooms"
-        value={ad.bedrooms}
-        onChange={(e) => setAd({ ...ad, bedrooms: e.target.value })}
-      />
+          <input
+            type="number"
+            min="0"
+            className="form-control mb-3"
+            placeholder="Enter how many bedrooms"
+            value={ad.bedrooms}
+            onChange={(e) => setAd({ ...ad, bedrooms: e.target.value })}
+          />
 
-      <input
-        type="number"
-        min="0"
-        className="form-control mb-3"
-        placeholder="Enter how many bathrooms"
-        value={ad.bathrooms}
-        onChange={(e) => setAd({ ...ad, bathrooms: e.target.value })}
-      />
+          <input
+            type="number"
+            min="0"
+            className="form-control mb-3"
+            placeholder="Enter how many bathrooms"
+            value={ad.bathrooms}
+            onChange={(e) => setAd({ ...ad, bathrooms: e.target.value })}
+          />
 
-      <input
-        type="number"
-        min="0"
-        className="form-control mb-3"
-        placeholder="Enter how many carpark"
-        value={ad.carpark}
-        onChange={(e) => setAd({ ...ad, carpark: e.target.value })}
-      />
+          <input
+            type="number"
+            min="0"
+            className="form-control mb-3"
+            placeholder="Enter how many carpark"
+            value={ad.carpark}
+            onChange={(e) => setAd({ ...ad, carpark: e.target.value })}
+          />
         </>
       ) : (
         ""

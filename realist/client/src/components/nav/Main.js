@@ -31,6 +31,10 @@ export default function Main() {
         Home
       </NavLink>
 
+      <NavLink className="nav-link" aria-current="page" to="/agents">
+        Agents
+      </NavLink>
+
       <a className="nav-link pointer" onClick={handlePostAdClick}>
         Post Ad
       </a>
@@ -51,7 +55,10 @@ export default function Main() {
       {loggedIn ? (
         <div className="dropdown">
           <li>
-            <a className="nav-link dropdown-toggle pointer" data-bs-toggle="dropdown">
+            <a
+              className="nav-link dropdown-toggle pointer"
+              data-bs-toggle="dropdown"
+            >
               {auth?.user?.name ? auth.user.name : auth.user.username}
             </a>
             <ul className="dropdown-menu">
