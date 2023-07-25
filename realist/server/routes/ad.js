@@ -22,4 +22,7 @@ router.delete("/ad/:_id", requireSignin, ad.remove);
 router.get("/enquiries", requireSignin, ad.enquiriedProperties);
 router.get("/wishlist", requireSignin, ad.wishlist);
 
+router.get("/ads-for-sell", ad.adsForSell);
+router.get("/ads-for-rent", ad.adsForRent);
+
 export default router;
