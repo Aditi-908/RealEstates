@@ -5,7 +5,7 @@ import mongoose from "mongoose";
 import { DATABASE } from "./config.js";
 import authRoutes from "./routes/auth.js";
 import adRoutes from "./routes/ad.js";
-
+const PORT=process.env.PORT||8000
 const app = express();
 
 // db
@@ -23,4 +23,4 @@ app.use(cors());
 app.use("/api", authRoutes);
 app.use("/api", adRoutes);
 
-app.listen(8000, () => console.log("server_running_on_port_8000"));
+app.listen(PORT, () => console.log(`server_running_on_port_${PORT}`));
